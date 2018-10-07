@@ -36,9 +36,9 @@ class ServerThread(Thread):
                 if self.debug: print(self.fsock, "server thread done")
                 return
             requestNum = ServerThread.requestCount
-            time.sleep(0.001)
             ServerThread.requestCount = requestNum + 1
             msg = ("%s! (%d)" % (msg, requestNum)).encode()
+            print(msg)
             self.fsock.sendmsg(msg)
 
 
