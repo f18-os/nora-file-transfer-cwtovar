@@ -53,12 +53,15 @@ if s is None:
     sys.exit(1)
 
 fs = FramedStreamSock(s, debug=debug)
-
-
-print("sending hello world")
-fs.sendmsg(b"hello world")
-print("received:", fs.receivemsg())
-
-fs.sendmsg(b"hello world")
-print("received:", fs.receivemsg())
+fileName=input('Enter file to transfer')
+try:
+    filetoTransfer=open(fileName,'rb')
+    fileToTransfer.close()
+except:
+    print('File Not Found. Error 404')
+    sys.exit(1)
+print("Sending %s" % fileName)
+fs.sendmsg(fileName.encode())
+with fopen(fileName, 'rb') as f:
+    fs.sendmsfg(f.read(100)
 

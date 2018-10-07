@@ -2,6 +2,7 @@
 import sys, os, socket, params, time
 from threading import Thread
 from framedSock import FramedStreamSock
+import threading
 
 switchesVarDefaults = (
     (('-l', '--listenPort') ,'listenPort', 50001),
@@ -22,7 +23,7 @@ bindAddr = ("127.0.0.1", listenPort)
 lsock.bind(bindAddr)
 lsock.listen(5)
 print("listening on:", bindAddr)
-
+lock=threading.Lock()
 class ServerThread(Thread):
     requestCount = 0            # one instance / class
     def __init__(self, sock, debug):
@@ -30,16 +31,26 @@ class ServerThread(Thread):
         self.fsock, self.debug = FramedStreamSock(sock, debug), debug
         self.start()
     def run(self):
+        lock.acquire()
         while True:
-            msg = self.fsock.receivemsg()
-            if not msg:
-                if self.debug: print(self.fsock, "server thread done")
-                return
+            try:
+                fileName = str(self.fsock.receivemsg())
+                fileName = 'serverTransfered_'+fileName
+                with fopen(fileName, 'wb+') as f:
+                    f.write(self.fsock.receivemsg())
+                if not msg:
+                    if self.debug: print(self.fsock, "server thread done")
+                    f.close()
+                    return
+            except:
+                f.close()
+            lock.release()
             requestNum = ServerThread.requestCount
             ServerThread.requestCount = requestNum + 1
-            msg = ("%s! (%d)" % (msg, requestNum)).encode()
-            print(msg)
-            self.fsock.sendmsg(msg)
+           # msg = ("%s! (%d)" % (msg, requestNum)).encode()
+#            print(msg)
+ #           self.fsock.sendmsg(msg)
+            lock.release() 
 
 
 while True:

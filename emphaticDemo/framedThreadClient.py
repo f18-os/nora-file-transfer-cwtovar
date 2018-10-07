@@ -61,14 +61,21 @@ class ClientThread(Thread):
            sys.exit(1)
 
        fs = FramedStreamSock(s, debug=debug)
+       fileName=input('Enter file to transfer')
+       try:
+           filetoTransfer=open(fileName,'rb')
+           fileToTransfer.close()
+       except:
+           print('File Not Found. Error 404')
+           sys.exit(1)
+       print("Sending %s" % fileName)
+       fs.sendmsg(fileName.encode())
+       f=open(fileName, 'rb')
+       msg=f.read(100)       
+       while(msg):
+           fs.sendmsg(msg)
+           msg=f.read(100)
 
-
-       print("sending hello world")
-       fs.sendmsg(b"hello world")
-       print("received:", fs.receivemsg())
-
-       fs.sendmsg(b"hello world")
-       print("received:", fs.receivemsg())
 
 for i in range(100):
     ClientThread(serverHost, serverPort, debug)
