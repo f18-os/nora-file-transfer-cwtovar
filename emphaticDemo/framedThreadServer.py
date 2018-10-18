@@ -31,27 +31,33 @@ class ServerThread(Thread):
         self.fsock, self.debug = FramedStreamSock(sock, debug), debug
         self.start()
     def run(self):
+        fileNameRead = False
         lock.acquire()
+        f= open('server_default', 'w')
+        f.close()
         while True:
             try:
-                fileName = str(self.fsock.receivemsg())
-                fileName = 'serverTransfered_'+fileName
-                with fopen(fileName, 'wb+') as f:
+                if fileNameRead:
                     f.write(self.fsock.receivemsg())
-                if not msg:
-                    if self.debug: print(self.fsock, "server thread done")
-                    f.close()
-                    return
+                    if not self.fsock.receivemsg():
+                        if self.debug: print(self.fsock, "server thread done")
+                        f.close()
+                        return
+                    requestNum = ServerThread.requestCount 
+                    ServerThread.requestCount = requestNum + 1
+                    msg = ("%s! (%d)" % (msg, requestNum)).encode()
+                    self.fsock.sendmsg(msg)
+                else:
+                    fileName = str(self.fsock.receivemsg())
+                    fileName = 'serverTransfered_'+fileName
+                    f= open(fileName, 'wb+')
+                    
             except:
+                lock.release()
                 f.close()
-            lock.release()
-            requestNum = ServerThread.requestCount
-            ServerThread.requestCount = requestNum + 1
-           # msg = ("%s! (%d)" % (msg, requestNum)).encode()
-#            print(msg)
- #           self.fsock.sendmsg(msg)
-            lock.release() 
-
+                print('Race condition prevented')
+                pass
+            
 
 while True:
     sock, addr = lsock.accept()
